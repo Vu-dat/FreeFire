@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vòng Bo Liêm Chính - AI Survival Game</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #0f172a;
+            --panel-bg: #1e293b;
+            --primary: #f97316; /* Free Fire Orange */
+            --primary-glow: rgba(249, 115, 22, 0.4);
+            --safe-zone: #10b981;
+            --danger: #ef4444;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow-x: hidden;
+            background-image: radial-gradient(circle at 50% 50%, #1e1b4b 0%, var(--bg-dark) 100%);
+        }
+
+        .container {
+            width: 100%;
+            max-width: 900px;
+            padding: 20px;
+        }
+
+        /* Screen management */
+        .screen {
+            display: none;
+            background: var(--panel-bg);
+            border: 2px solid rgba(249, 115, 22, 0.3);
+            border-radius: 16px;
+            padding: 40px;
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.5), 0 0 15px var(--primary-glow);
+            animation: fadeIn 0.4s ease-in-out;
+        }
+
+        .screen.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Welcome Screen */
+        .welcome-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2.8rem;
+            font-weight: 900;
+            text-align: center;
+            color: var(--primary);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 10px;
+            text-shadow: 0 0 15px var(--primary-glow);
+        }
+
+        .welcome-subtitle {
+            text-align: center;
+            font-size: 1.2rem;
+            color: var(--text-muted);
+            margin-bottom: 30px;
+        }
+
+        .rules-box {
+            background: rgba(15, 23, 42, 0.6);
+            border-left: 4px solid var(--primary);
+            padding: 20px;
+            border-radius: 0 8px 8px 0;
+            margin-bottom: 30px;
+        }
+
+        .rules-box h3 {
+            font-family: 'Orbitron', sans-serif;
+            margin-bottom: 10px;
+            color: #fb923c;
+        }
+
+        .rules-box ul {
+            list-style-type: none;
+        }
+
+        .rules-box li {
+            margin-bottom: 8px;
+            font-size: 1rem;
+            color: #cbd5e1;
+        }
+
+        /* Game Header HUD */
+        .game-hud {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        .hud-item {
+            font-size: 0.9rem;
+            background: rgba(15, 23, 42, 0.8);
+            padding: 8px 15px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .hud-item span {
+            color: var(--primary);
+            font-weight: 700;
+        }
+
+        /* Question Area */
+        .question-level {
+            display: inline-block;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.8rem;
+            background: #ea580c;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .question-text {
+            font-size: 1.35rem;
+            font-weight: 600;
+            margin-bottom: 25px;
+            line-height: 1.5;
+        }
+
+        .options-grid {
+            display: grid;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .option-btn {
+            background: #334155;
+            color: var(--text-main);
+            border: 2px solid transparent;
+            padding: 16px 20px;
+            border-radius: 10px;
+            font-size: 1.05rem;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+        }
+
+        .option-btn .opt-prefix {
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 700;
+            width: 30px;
+            color: var(--primary);
+        }
+
+        .option-btn:hover:not(:disabled) {
+            background: #475569;
+            border-color: var(--primary);
+            transform: translateX(5px);
+        }
+
+        .option-btn.correct {
+            background: rgba(16, 185, 129, 0.2);
+            border-color: var(--safe-zone);
+            color: #34d399;
+        }
+
+        .option-btn.wrong {
+            background: rgba(239, 68, 68, 0.2);
+            border-color: var(--danger);
+            color: #f87171;
+        }
+
+        /* Action Buttons & Feedback */
+        .action-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .feedback-msg {
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+
+        .btn {
+            font-family: 'Orbitron', sans-serif;
+            background: linear-gradient(135deg, #f97316, #ea580c);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            font-size: 1rem;
+            font-weight: 700;
+            border-radius: 8px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(249, 115, 22, 0.4);
+            transition: all 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(249, 115, 22, 0.6);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* End Screen */
+        .end-screen {
+            text-align: center;
+        }
+
+        .end-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2.5rem;
+            color: var(--safe-zone);
+            margin-bottom: 15px;
+            text-shadow: 0 0 10px rgba(16, 185, 129, 0.4);
+        }
+
+        .score-display {
+            font-size: 1.4rem;
+            margin-bottom: 30px;
+            color: #cbd5e1;
+        }
+
+        .score-display span {
+            font-family: 'Orbitron', sans-serif;
+            color: var(--primary);
+            font-size: 2rem;
+            font-weight: 700;
+        }
+
+        .slogan-box {
+            background: rgba(249, 115, 22, 0.1);
+            border: 2px dashed var(--primary);
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.3rem;
+            color: #fb923c;
+            margin-bottom: 30px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <!-- 1. MÀN HÌNH CHÀO -->
+        <div id="welcome-screen" class="screen active">
+            <h1 class="welcome-title">Vòng Bo Liêm Chính</h1>
+            <p class="welcome-subtitle">AI Smart – Not AI Cheat | Thử thách sinh tồn học thuật số</p>
+            
+            <div class="rules-box">
+                <h3>📜 Quy tắc sinh tồn:</h3>
+                <ul>
+                    <li>🎯 Trò chơi gồm 12 câu hỏi từ cơ bản đến nâng cao (Chia làm 4 cấp độ).</li>
+                    <li>🔥 Mỗi lần chọn sai, "vòng bo độc" sẽ thu hẹp và bạn bị trừ điểm sinh tồn.</li>
+                    <li>💡 Hãy dùng tư duy phản biện để tìm ra phương án chuẩn mực nhất trước cạm bẫy của AI!</li>
+                </ul>
+            </div>
+
+            <div style="text-align: center;">
+                <button class="btn" onclick="startGame()">Nhảy Dù Vào Trận</button>
+            </div>
+        </div>
+
+        <!-- 2. MÀN HÌNH CHƠI GAME -->
+        <div id="game-screen" class="screen">
+            <div class="game-hud">
+                <div class="hud-item">CÂU HỎI: <span id="current-q-num">1</span>/12</div>
+                <div class="hud-item">ĐIỂM SINH TỒN: <span id="score">0</span></div>
+            </div>
+
+            <div id="question-level" class="question-level">Level 1 — Nhận biết</div>
+            <div id="question-text" class="question-text">Đang tải câu hỏi...</div>
+
+            <div class="options-grid" id="options-container">
+                <!-- Các nút đáp án sẽ được render bằng JS -->
+            </div>
+
+            <div class="action-container">
+                <div class="feedback-msg" id="feedback-msg"></div>
+                <button id="next-btn" class="btn" onclick="nextQuestion()" style="display: none;">Câu Tiếp Theo</button>
+            </div>
+        </div>
+
+        <!-- 3. MÀN HÌNH TỔNG KẾT -->
+        <div id="end-screen" class="screen end-screen">
+            <h2 class="end-title">🎉 SỐNG SÓT THÀNH CÔNG! (TOP 1)</h2>
+            <p class="score-display">Tổng điểm liêm chính của bạn đạt được:<br><span id="final-score">0</span> / 120 điểm</p>
+            
+            <div class="slogan-box">
+                "AI Smart – Not AI Cheat"
+            </div>
+
+            <p style="color: var(--text-muted); margin-bottom: 30px;">Bạn đã chứng minh được bản lĩnh của một sinh viên thông thái: Biết làm chủ công nghệ, giữ vững tư duy độc lập và bảo vệ liêm chính học thuật!</p>
+
+            <button class="btn" onclick="restartGame()">Chơi Lại Từ Đầu</button>
+        </div>
+    </div>
+
+    <script>
+        // Danh sách 12 câu hỏi chuẩn theo yêu cầu của bạn
+        const questions = [
+            // Level 1: Nhận biết (1-3)
+            {
+                level: "Level 1 — Nhận biết cơ bản",
+                question: "Question 1. How can generative AI help students stay motivated?",
+                options: [
+                    "By doing all their assignments",
+                    "By providing personalized explanations and feedback",
+                    "By removing the need to study",
+                    "By eliminating all learning challenges"
+                ],
+                correct: 1
+            },
+            {
+                level: "Level 1 — Nhận biết cơ bản",
+                question: "Question 2. Which activity best helps students retrieve information from memory?",
+                options: [
+                    "Copying notes repeatedly",
+                    "Reading answers without thinking",
+                    "Testing themselves before checking the answers",
+                    "Asking AI to remember everything for them"
+                ],
+                correct: 2
+            },
+            {
+                level: "Level 1 — Nhận biết cơ bản",
+                question: "Question 3. What is the most responsible way to use AI for an assignment?",
+                options: [
+                    "Copy AI’s answer directly",
+                    "Submit AI-generated work as your own",
+                    "Avoid checking AI-generated information",
+                    "Use AI for guidance and develop your own understanding"
+                ],
+                correct: 3
+            },
+            // Level 2: Moderate — Hiểu mối quan hệ (4-6)
+            {
+                level: "Level 2 — Hiểu mối quan hệ",
+                question: "Question 4. Why can relying too much on AI weaken students’ learning?",
+                options: [
+                    "AI always provides incorrect information",
+                    "Students may practice less independent thinking and problem-solving",
+                    "AI prevents students from accessing information",
+                    "Students become unable to use digital tools"
+                ],
+                correct: 1
+            },
+            {
+                level: "Level 2 — Hiểu mối quan hệ",
+                question: "Question 5. Why is human memory still important when AI can store and retrieve information?",
+                options: [
+                    "Humans must memorize every fact available online",
+                    "AI cannot store large amounts of information",
+                    "Prior knowledge helps people connect ideas, reason, and evaluate AI responses",
+                    "Human memory is always more accurate than AI"
+                ],
+                correct: 2
+            },
+            {
+                level: "Level 2 — Hiểu mối quan hệ",
+                question: "Question 6. Which strategy is most likely to help students retain knowledge over time?",
+                options: [
+                    "Ask AI to summarize a chapter once",
+                    "Read the same answer without attempting to recall it",
+                    "Memorize AI-generated answers immediately before an exam",
+                    "Use AI-generated quizzes for repeated self-testing and review"
+                ],
+                correct: 3
+            },
+            // Level 3: Hard — Ứng dụng thực tế (7-9)
+            {
+                level: "Level 3 — Áp dụng tình huống thực tế",
+                question: "Question 7. A student feels discouraged because a topic is too difficult. Which use of AI is most likely to support both motivation and learning?",
+                options: [
+                    "Ask AI to complete all related exercises",
+                    "Ask AI to explain the topic in smaller steps, then solve practice problems independently",
+                    "Ask AI for the answers and memorize them without understanding",
+                    "Avoid the topic and study only familiar material"
+                ],
+                correct: 1
+            },
+            {
+                level: "Level 3 — Áp dụng tình huống thực tế",
+                question: "Question 8. A student uses AI to generate flashcards but looks at each answer before attempting to recall it. What should the student change?",
+                options: [
+                    "Stop using all learning tools",
+                    "Create more flashcards but keep reading the answers first",
+                    "Attempt to answer each question from memory before revealing the answer",
+                    "Ask AI to memorize the flashcards on the student’s behalf"
+                ],
+                correct: 2
+            },
+            {
+                level: "Level 3 — Áp dụng tình huống thực tế",
+                question: "Question 9. An AI tool gives a convincing explanation with several academic references. What should a student do before using it in an assignment?",
+                options: [
+                    "Accept it because the explanation sounds convincing",
+                    "Check whether the references exist and verify the claims using reliable sources",
+                    "Copy the references without opening them",
+                    "Assume that academic language guarantees accuracy"
+                ],
+                correct: 1
+            },
+            // Level 4: Very Hard — Tư duy phản biện (10-12)
+            {
+                level: "Level 4 — Tư duy phản biện nâng cao",
+                question: "Question 10. Two students use AI to study the same topic. Student A reads an AI summary several times. Student B studies, answers questions from memory, and checks mistakes. Why is Student B’s approach generally more effective?",
+                options: [
+                    "AI summaries always contain incomplete information",
+                    "Student B avoids using AI too much, so all information is automatically remembered",
+                    "Student B practices retrieval and uses feedback to correct misunderstandings",
+                    "Student A should never read summaries"
+                ],
+                correct: 2
+            },
+            {
+                level: "Level 4 — Tư duy phản biện nâng cao",
+                question: "Question 11. A student has only one hour to prepare for an exam. Which strategy best balances efficiency, knowledge retention, and responsible AI use?",
+                options: [
+                    "Ask AI to predict every exam question and memorize its answers",
+                    "Use AI to identify key concepts, test personal understanding, review mistakes, and verify important facts",
+                    "Read AI-generated notes continuously without taking breaks or testing knowledge",
+                    "Spend the entire hour checking every possible online source without practicing"
+                ],
+                correct: 1
+            },
+            {
+                level: "Level 4 — Tư duy phản biện nâng cao",
+                question: "Question 12. A university wants students to benefit from AI without becoming dependent on it. Which policy best supports this goal?",
+                options: [
+                    "Ban all AI tools in every learning activity",
+                    "Allow students to submit AI-generated answers without explanation",
+                    "Require memorize all course content and prohibit external resources",
+                    "Encourage AI for explanations and feedback while requiring independent reasoning, verification, and transparent use"
+                ],
+                correct: 3
+            }
+        ];
+
+        let currentIdx = 0;
+        let score = 0;
+        let isAnswered = false;
+
+        const welcomeScreen = document.getElementById('welcome-screen');
+        const gameScreen = document.getElementById('game-screen');
+        const endScreen = document.getElementById('end-screen');
+
+        const currentQNumEl = document.getElementById('current-q-num');
+        const scoreEl = document.getElementById('score');
+        const questionLevelEl = document.getElementById('question-level');
+        const questionTextEl = document.getElementById('question-text');
+        const optionsContainer = document.getElementById('options-container');
+        const feedbackMsg = document.getElementById('feedback-msg');
+        const nextBtn = document.getElementById('next-btn');
+        const finalScoreEl = document.getElementById('final-score');
+
+        function startGame() {
+            currentIdx = 0;
+            score = 0;
+            welcomeScreen.classList.remove('active');
+            gameScreen.classList.add('active');
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            isAnswered = false;
+            feedbackMsg.textContent = '';
+            nextBtn.style.display = 'none';
+
+            const q = questions[currentIdx];
+            currentQNumEl.textContent = currentIdx + 1;
+            scoreEl.textContent = score;
+            questionLevelEl.textContent = q.level;
+            questionTextEl.textContent = q.question;
+
+            optionsContainer.innerHTML = '';
+            const prefixes = ['A', 'B', 'C', 'D'];
+
+            q.options.forEach((opt, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.innerHTML = `<span class="opt-prefix">${prefixes[index]}.</span> <span>${opt}</span>`;
+                btn.onclick = () => selectOption(index);
+                optionsContainer.appendChild(btn);
+            });
+        }
+
+        function selectOption(selectedIndex) {
+            if (isAnswered) return;
+            isAnswered = true;
+
+            const q = questions[currentIdx];
+            const buttons = optionsContainer.children;
+
+            if (selectedIndex === q.correct) {
+                buttons[selectedIndex].classList.add('correct');
+                feedbackMsg.textContent = '🎯 CHÍNH XÁC! (Vòng bo an toàn)';
+                feedbackMsg.style.color = '#34d399';
+                score += 10;
+                scoreEl.textContent = score;
+            } else {
+                buttons[selectedIndex].classList.add('wrong');
+                buttons[q.correct].classList.add('correct');
+                feedbackMsg.textContent = '❌ DÍNH BẪY AI! (Mất máu)';
+                feedbackMsg.style.color = '#f87171';
+            }
+
+            // Khóa tất cả các nút sau khi chọn
+            for (let btn of buttons) {
+                btn.style.cursor = 'default';
+            }
+
+            nextBtn.style.display = 'block';
+        }
+
+        function nextQuestion() {
+            currentIdx++;
+            if (currentIdx < questions.length) {
+                loadQuestion();
+            } else {
+                gameScreen.classList.remove('active');
+                endScreen.classList.add('active');
+                finalScoreEl.textContent = score;
+            }
+        }
+
+        function restartGame() {
+            endScreen.classList.remove('active');
+            welcomeScreen.classList.add('active');
+        }
+    </script>
+</body>
+</html>

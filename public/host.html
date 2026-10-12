@@ -1,0 +1,1001 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MÁY CHỦ ĐIỀU HÀNH — Vòng Bo Liêm Chính (Host Dashboard)</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;800;900&family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --ff-orange: #ff6b00;
+            --ff-orange-glow: rgba(255, 107, 0, 0.5);
+            --ff-gold: #ffbe0b;
+            --ff-gold-glow: rgba(255, 190, 11, 0.5);
+            --ff-cyan: #00f0ff;
+            --ff-cyan-glow: rgba(0, 240, 255, 0.4);
+            --safe-zone: #10b981;
+            --safe-glow: rgba(16, 185, 129, 0.4);
+            --danger: #ef4444;
+            --danger-glow: rgba(239, 68, 68, 0.5);
+            --bg-dark: #070b14;
+            --bg-panel: rgba(15, 23, 42, 0.92);
+            --border-panel: rgba(255, 107, 0, 0.35);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+        }
+
+        body {
+            font-family: 'Rajdhani', 'Inter', sans-serif;
+            background-color: var(--bg-dark);
+            color: #f8fafc;
+            min-height: 100vh;
+            overflow-x: hidden;
+            background-image: radial-gradient(circle at 50% 15%, #1e1b4b 0%, var(--bg-dark) 100%);
+            padding: 20px;
+        }
+
+        #bg-canvas {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .host-wrapper {
+            position: relative;
+            z-index: 10;
+            max-width: 1320px;
+            margin: 0 auto;
+        }
+
+        /* Top Header */
+        .host-header {
+            background: var(--bg-panel);
+            border: 2px solid var(--border-panel);
+            border-radius: 16px;
+            padding: 18px 28px;
+            margin-bottom: 22px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 0 30px rgba(0,0,0,0.8), 0 0 15px var(--ff-orange-glow);
+            backdrop-filter: blur(12px);
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .host-icon-badge {
+            background: linear-gradient(135deg, var(--ff-orange), #ea580c);
+            font-size: 2.2rem;
+            width: 58px;
+            height: 58px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 15px var(--ff-orange-glow);
+        }
+
+        .host-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2rem;
+            font-weight: 900;
+            letter-spacing: 2px;
+            background: linear-gradient(135deg, #fff, var(--ff-gold), var(--ff-orange));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .host-subtitle {
+            font-size: 1rem;
+            color: #94a3b8;
+            font-weight: 600;
+        }
+
+        .server-status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(16, 185, 129, 0.15);
+            border: 1px solid var(--safe-zone);
+            color: var(--safe-zone);
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.85rem;
+            font-weight: 700;
+            padding: 8px 16px;
+            border-radius: 20px;
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--safe-zone);
+            box-shadow: 0 0 8px var(--safe-zone);
+            animation: blink 1.2s infinite;
+        }
+
+        @keyframes blink { 50% { opacity: 0.3; } }
+
+        /* Banner QR & Link kết nối */
+        .join-banner {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            gap: 25px;
+            background: var(--bg-panel);
+            border: 2px solid rgba(0, 240, 255, 0.3);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 22px;
+            box-shadow: 0 0 25px rgba(0, 240, 255, 0.15);
+            align-items: center;
+        }
+
+        .qr-card {
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 12px;
+            text-align: center;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .qr-card img {
+            width: 220px;
+            height: 220px;
+            display: block;
+            border-radius: 8px;
+        }
+
+        .qr-label {
+            color: #0f172a;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.75rem;
+            font-weight: 800;
+            margin-top: 8px;
+            letter-spacing: 1px;
+        }
+
+        .join-url-box {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-top: 10px;
+        }
+
+        .join-url-input {
+            flex: 1;
+            background: rgba(11, 19, 36, 0.85);
+            border: 2px solid var(--ff-cyan);
+            border-radius: 10px;
+            padding: 14px 18px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--ff-gold);
+            outline: none;
+        }
+
+        .btn-copy {
+            background: var(--ff-cyan);
+            color: #070b14;
+            border: none;
+            padding: 14px 22px;
+            border-radius: 10px;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 800;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-copy:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 15px var(--ff-cyan-glow);
+        }
+
+        /* Control Bar & Sĩ Số */
+        .control-bar {
+            background: var(--bg-panel);
+            border: 2px solid var(--border-panel);
+            border-radius: 16px;
+            padding: 20px 28px;
+            margin-bottom: 22px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .player-counter {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .counter-badge {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2.2rem;
+            font-weight: 900;
+            color: var(--ff-gold);
+            background: rgba(11, 19, 36, 0.8);
+            border: 2px solid var(--ff-gold);
+            padding: 6px 20px;
+            border-radius: 12px;
+            box-shadow: 0 0 15px var(--ff-gold-glow);
+        }
+
+        .counter-text {
+            font-size: 1.2rem;
+            color: #cbd5e1;
+            font-weight: 600;
+        }
+
+        .btn-start-match {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.35rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: #fff;
+            background: linear-gradient(135deg, #ff8c00, #ff4500);
+            border: none;
+            padding: 16px 40px;
+            border-radius: 12px;
+            cursor: pointer;
+            box-shadow: 0 8px 30px var(--ff-orange-glow);
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-start-match:hover:not(:disabled) {
+            transform: scale(1.03);
+            box-shadow: 0 10px 35px rgba(255, 69, 0, 0.85);
+        }
+
+        .btn-start-match:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        /* LOBBY PLAYERS GRID */
+        .lobby-section-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.25rem;
+            color: var(--ff-gold);
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .players-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+            gap: 14px;
+            margin-bottom: 30px;
+        }
+
+        .player-card {
+            background: rgba(15, 23, 42, 0.88);
+            border: 2px solid var(--safe-zone);
+            border-radius: 12px;
+            padding: 12px 14px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 0 15px rgba(16, 185, 129, 0.15);
+        }
+
+        .player-avatar {
+            font-size: 1.8rem;
+            width: 44px;
+            height: 44px;
+            background: rgba(11, 19, 36, 0.9);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .player-name {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.95rem;
+            font-weight: 800;
+            color: #fff;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .player-status-badge {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.65rem;
+            font-weight: 700;
+            color: var(--safe-zone);
+        }
+
+        /* ==================== TOURNAMENT ARENA VIEW ==================== */
+        .in-game-view {
+            display: none;
+        }
+
+        /* Màn hình Trực Tiếp Câu Hỏi Trên Máy Chiếu */
+        .question-stage-card {
+            background: var(--bg-panel);
+            border: 2px solid var(--ff-cyan);
+            border-radius: 16px;
+            padding: 24px 30px;
+            margin-bottom: 22px;
+            box-shadow: 0 0 30px var(--ff-cyan-glow);
+        }
+
+        .stage-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .stage-q-num {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.3rem;
+            font-weight: 900;
+            color: var(--ff-gold);
+        }
+
+        .stage-timer {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.8rem;
+            font-weight: 900;
+            color: var(--ff-cyan);
+            background: rgba(11, 19, 36, 0.9);
+            padding: 4px 16px;
+            border-radius: 8px;
+            border: 1px solid var(--ff-cyan);
+        }
+
+        .stage-question-text {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: #fff;
+            line-height: 1.4;
+            margin-bottom: 20px;
+        }
+
+        .stage-options-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+            margin-bottom: 20px;
+        }
+
+        .stage-option-box {
+            background: rgba(30, 41, 59, 0.85);
+            border: 2px solid rgba(255, 255, 255, 0.12);
+            border-radius: 12px;
+            padding: 16px 20px;
+            font-size: 1.25rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            transition: all 0.3s;
+        }
+
+        .stage-option-box.correct-highlight {
+            border-color: var(--safe-zone) !important;
+            background: rgba(16, 185, 129, 0.3) !important;
+            color: #6ee7b7 !important;
+            box-shadow: 0 0 25px var(--safe-glow);
+        }
+
+        .stage-opt-badge {
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 900;
+            font-size: 1.1rem;
+            width: 36px;
+            height: 36px;
+            background: rgba(15, 23, 42, 0.9);
+            border: 1px solid var(--ff-orange);
+            color: var(--ff-gold);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Thanh Tiến Độ Nộp Bài Của Cả Lớp */
+        .stage-submission-bar {
+            background: rgba(11, 19, 36, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 12px;
+            padding: 14px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .submission-status-text {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.15rem;
+            font-weight: 800;
+            color: var(--ff-gold);
+        }
+
+        /* Nút Host Chuyển Câu */
+        .btn-next-question {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.25rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            background: linear-gradient(135deg, var(--ff-orange), #ea580c);
+            color: #fff;
+            border: none;
+            padding: 14px 30px;
+            border-radius: 10px;
+            cursor: pointer;
+            box-shadow: 0 6px 20px var(--ff-orange-glow);
+            transition: all 0.2s;
+            display: none;
+        }
+
+        .btn-next-question:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 30px rgba(255, 107, 0, 0.9);
+        }
+
+        /* Thống kê tỷ lệ chọn A, B, C, D của cả lớp */
+        .classroom-stats-row {
+            display: none;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin-top: 15px;
+            margin-bottom: 15px;
+        }
+
+        .class-stat-card {
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 10px;
+            text-align: center;
+        }
+
+        .class-stat-val {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.6rem;
+            font-weight: 900;
+            color: var(--ff-cyan);
+        }
+
+        /* PODIUM TOP 3 CÓ ĐIỂM TỐC ĐỘ */
+        .podium-container {
+            display: grid;
+            grid-template-columns: 1fr 1.2fr 1fr;
+            gap: 20px;
+            align-items: flex-end;
+            margin-bottom: 25px;
+        }
+
+        .podium-card {
+            background: var(--bg-panel);
+            border-radius: 16px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 0 25px rgba(0,0,0,0.6);
+        }
+
+        .podium-1 {
+            border: 2px solid var(--ff-gold);
+            box-shadow: 0 0 35px var(--ff-gold-glow);
+            transform: translateY(-12px);
+        }
+
+        .podium-2 { border: 2px solid #cbd5e1; }
+        .podium-3 { border: 2px solid #b45309; }
+
+        .podium-score {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2.2rem;
+            font-weight: 900;
+            color: var(--ff-gold);
+        }
+
+        .podium-speed-tag {
+            font-size: 0.85rem;
+            color: var(--ff-cyan);
+            font-weight: 700;
+            margin-top: 4px;
+        }
+
+        /* Bảng Xếp Hạng Đầy Đủ */
+        .leaderboard-card {
+            background: var(--bg-panel);
+            border: 2px solid var(--border-panel);
+            border-radius: 16px;
+            padding: 22px;
+            box-shadow: 0 0 30px rgba(0,0,0,0.8);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 1.1rem;
+        }
+
+        th {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.8rem;
+            color: var(--ff-cyan);
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            padding: 12px 14px;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+            text-align: left;
+        }
+
+        td {
+            padding: 12px 14px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            font-weight: 600;
+        }
+
+        tr:hover td { background: rgba(255, 107, 0, 0.08); }
+
+        .td-rank { font-family: 'Orbitron', sans-serif; font-weight: 900; font-size: 1.2rem; color: var(--ff-gold); }
+        .td-name { font-family: 'Orbitron', sans-serif; font-weight: 800; color: #fff; }
+        .td-score { font-family: 'Orbitron', sans-serif; font-weight: 900; color: var(--ff-gold); font-size: 1.2rem; }
+    </style>
+</head>
+<body>
+
+    <canvas id="bg-canvas"></canvas>
+
+    <div class="host-wrapper">
+        <!-- TOP HEADER -->
+        <div class="host-header">
+            <div class="header-left">
+                <div class="host-icon-badge">👑</div>
+                <div>
+                    <h1 class="host-title">TRUNG TÂM ĐIỀU HÀNH MÁY CHỦ</h1>
+                    <p class="host-subtitle">Vòng Bo Liêm Chính — Quản Trị Giải Đấu Battle Royale (Server Host)</p>
+                </div>
+            </div>
+            <div class="server-status-pill">
+                <span class="status-dot"></span>
+                <span id="server-status-text">MÁY CHỦ TRỰC TUYẾN</span>
+            </div>
+        </div>
+
+        <!-- BANNER QR & ĐƯỜNG LINK THAM GIA -->
+        <div class="join-banner" id="join-banner-section">
+            <div class="qr-card">
+                <img id="qr-code-img" src="" alt="Mã QR tham gia">
+                <div class="qr-label">QUÉT MÃ ĐỂ VÀO SẢNH CHỜ</div>
+            </div>
+            <div>
+                <h3 style="font-family: 'Orbitron'; font-size: 1.4rem; color: var(--ff-cyan); margin-bottom: 8px;">
+                    📱 ĐƯỜNG DẪN THAM GIA CHO SINH VIÊN (MOBILE / PC):
+                </h3>
+                <div class="join-url-box">
+                    <input type="text" id="client-url-input" class="join-url-input" readonly value="Đang lấy IP...">
+                    <button class="btn-copy" onclick="copyJoinUrl()">📋 SAO CHÉP LINK</button>
+                </div>
+                <p style="color: #cbd5e1; font-size: 1.05rem; margin-top: 12px; line-height: 1.4;">
+                    💡 <strong>Quy tắc thi đấu:</strong> Sinh viên bắt buộc phải nhập họ tên cá nhân. Trò chơi diễn ra đồng bộ theo từng câu hỏi; sau khi chốt đáp án, tất cả sinh viên phải chờ cả lớp hoàn thành thì mới cùng công bố đáp án. Ai trả lời nhanh và chính xác hơn sẽ nhận thêm điểm tốc độ (Speed Points)!
+                </p>
+            </div>
+        </div>
+
+        <!-- THANH ĐIỀU KHIỂN & BỘ ĐẾM SĨ SỐ -->
+        <div class="control-bar" id="control-bar-section">
+            <div class="player-counter">
+                <div class="counter-badge" id="player-count-display">0 / 50</div>
+                <div class="counter-text">Sinh viên đã nhập tên & sẵn sàng tại Sảnh Chờ</div>
+            </div>
+            <div style="display: flex; gap: 12px;">
+                <button id="btn-start-match" class="btn-start-match" onclick="hostStartMatch()" disabled>
+                    <span>🚀</span> BẮT ĐẦU TRẬN ĐẤU (START)
+                </button>
+                <button style="background: rgba(30, 41, 59, 0.8); border: 1px solid rgba(255,255,255,0.2); color:#fff; padding:12px 18px; border-radius:10px; font-family:'Orbitron'; cursor:pointer;" onclick="hostResetLobby()">
+                    🔄 Reset Sảnh
+                </button>
+            </div>
+        </div>
+
+        <!-- VIEW 1: SẢNH CHỜ (LOBBY VIEW) -->
+        <div id="lobby-view">
+            <div class="lobby-section-title">
+                <span>👥</span> DANH SÁCH CHIẾN BINH ĐÃ ĐIỀN TÊN VÀO PHÒNG:
+            </div>
+            <div class="players-grid" id="players-lobby-grid"></div>
+        </div>
+
+        <!-- VIEW 2: CHIẾN ĐẤU ĐỒNG BỘ TRÊN MÁY CHIẾU (TOURNAMENT ARENA VIEW) -->
+        <div id="in-game-view" class="in-game-view">
+            <!-- THẺ CÂU HỎI TRỰC TIẾP TRÊN MÁY CHIẾU -->
+            <div class="question-stage-card">
+                <div class="stage-header">
+                    <div class="stage-q-num" id="stage-q-num">CÂU HỎI 1 / 12</div>
+                    <div class="stage-timer" id="stage-timer">30s</div>
+                </div>
+                <div class="stage-question-text" id="stage-question-text">
+                    Đang chuẩn bị câu hỏi...
+                </div>
+
+                <!-- 4 LỰA CHỌN -->
+                <div class="stage-options-grid" id="stage-options-container"></div>
+
+                <!-- THỐNG KÊ LỰA CHỌN CẢ LỚP (HIỆN KHI REVEAL) -->
+                <div class="classroom-stats-row" id="classroom-stats-row">
+                    <div class="class-stat-card">
+                        <div style="color: var(--text-muted); font-size: 0.85rem;">CHỌN A</div>
+                        <div class="class-stat-val" id="stat-A">0</div>
+                    </div>
+                    <div class="class-stat-card">
+                        <div style="color: var(--text-muted); font-size: 0.85rem;">CHỌN B</div>
+                        <div class="class-stat-val" id="stat-B">0</div>
+                    </div>
+                    <div class="class-stat-card">
+                        <div style="color: var(--text-muted); font-size: 0.85rem;">CHỌN C</div>
+                        <div class="class-stat-val" id="stat-C">0</div>
+                    </div>
+                    <div class="class-stat-card">
+                        <div style="color: var(--text-muted); font-size: 0.85rem;">CHỌN D</div>
+                        <div class="class-stat-val" id="stat-D">0</div>
+                    </div>
+                </div>
+
+                <!-- THANH TIẾN ĐỘ NỘP BÀI CẢ LỚP & NÚT ĐIỀU KHIỂN HOST -->
+                <div class="stage-submission-bar">
+                    <div class="submission-status-text" id="stage-submission-text">
+                        ⏳ Đang đợi sinh viên nộp bài: 0 / 0 người đã chốt...
+                    </div>
+                    <div style="display: flex; gap: 10px;">
+                        <button class="btn-copy" id="btn-force-reveal" style="background: var(--ff-gold); color: #000; font-family: 'Orbitron'; font-weight: 800;" onclick="hostForceReveal()">
+                            ⚡ KHUI ĐÁP ÁN NGAY
+                        </button>
+                        <button class="btn-next-question" id="btn-next-question" onclick="hostNextQuestion()">
+                            ➡️ CÂU TIẾP THEO
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- BỤC VINH QUANG PODIUM TOP 3 -->
+            <div class="podium-container">
+                <div class="podium-card podium-2">
+                    <div style="font-size: 2.5rem; margin-bottom: 4px;">🥈</div>
+                    <div style="font-family: 'Orbitron'; font-size: 1.3rem; font-weight: 900;" id="podium-2-name">---</div>
+                    <div class="podium-score" id="podium-2-score">0</div>
+                    <div class="podium-speed-tag" id="podium-2-speed">TOP 2</div>
+                </div>
+                <div class="podium-card podium-1">
+                    <div style="font-size: 3rem; margin-bottom: 4px;">👑</div>
+                    <div style="font-family: 'Orbitron'; font-size: 1.5rem; font-weight: 900;" id="podium-1-name">---</div>
+                    <div class="podium-score" id="podium-1-score">0</div>
+                    <div class="podium-speed-tag" id="podium-1-speed">TOP 1 BOOYAH</div>
+                </div>
+                <div class="podium-card podium-3">
+                    <div style="font-size: 2.5rem; margin-bottom: 4px;">🥉</div>
+                    <div style="font-family: 'Orbitron'; font-size: 1.3rem; font-weight: 900;" id="podium-3-name">---</div>
+                    <div class="podium-score" id="podium-3-score">0</div>
+                    <div class="podium-speed-tag" id="podium-3-speed">TOP 3</div>
+                </div>
+            </div>
+
+            <!-- BẢNG ĐIỂM LEADERBOARD CẢ PHÒNG -->
+            <div class="leaderboard-card">
+                <div class="lobby-section-title">
+                    <span>🏆 BẢNG XẾP HẠNG SINH TỒN THỜI GIAN THỰC (ĐIỂM CƠ BẢN + THƯỞNG TỐC ĐỘ)</span>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Hạng</th>
+                            <th>Sinh Viên</th>
+                            <th>Nhân Vật</th>
+                            <th>Tổng Điểm</th>
+                            <th>⚡ Thưởng Tốc Độ</th>
+                            <th>Máu (HP)</th>
+                            <th>Trạng Thái</th>
+                        </tr>
+                    </thead>
+                    <tbody id="leaderboard-tbody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let ws = null;
+        let gameState = 'LOBBY';
+        let currentQIdx = 0;
+        let totalQuestions = 12;
+        let currentStageTimerInterval = null;
+        let stageSecondsLeft = 30;
+
+        const charNames = ['Kelly Fact-Check', 'Chrono Phản Biện', 'Alok Prompt-Master'];
+        const charIcons = ['🔍', '🛡️', '⚡'];
+
+        window.addEventListener('DOMContentLoaded', () => {
+            initWebSocket();
+            fetchServerInfo();
+        });
+
+        function fetchServerInfo() {
+            fetch('/api/info')
+                .then(r => r.json())
+                .then(data => {
+                    document.getElementById('client-url-input').value = data.clientUrl;
+                    if (data.qrCode) document.getElementById('qr-code-img').src = data.qrCode;
+                })
+                .catch(err => console.error(err));
+        }
+
+        function initWebSocket() {
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsUrl = `${protocol}//${window.location.host}`;
+            ws = new WebSocket(wsUrl);
+
+            ws.onopen = () => {
+                document.getElementById('server-status-text').textContent = 'MÁY CHỦ SẴN SÀNG';
+                ws.send(JSON.stringify({ type: 'REGISTER_HOST' }));
+            };
+
+            ws.onmessage = (event) => {
+                const msg = JSON.parse(event.data);
+
+                if (msg.type === 'HOST_CONNECTED_ACK') {
+                    document.getElementById('client-url-input').value = msg.clientUrl;
+                    if (msg.qrCode) document.getElementById('qr-code-img').src = msg.qrCode;
+                    updateLobbyView(msg.players || []);
+                    updateLeaderboard(msg.leaderboard || []);
+                }
+
+                if (msg.type === 'LOBBY_UPDATE') {
+                    updateLobbyView(msg.players || []);
+                }
+
+                if (msg.type === 'MATCH_START_COUNTDOWN') {
+                    gameState = 'PLAYING';
+                    document.getElementById('lobby-view').style.display = 'none';
+                    document.getElementById('join-banner-section').style.display = 'none';
+                    document.getElementById('control-bar-section').style.display = 'none';
+                    document.getElementById('in-game-view').style.display = 'block';
+                }
+
+                // CÂU HỎI MỚI BẮT ĐẦU
+                if (msg.type === 'QUESTION_START') {
+                    handleHostQuestionStart(msg);
+                }
+
+                // CẬP NHẬT TIẾN ĐỘ NỘP BÀI CẢ PHÒNG
+                if (msg.type === 'SUBMISSION_PROGRESS') {
+                    const textEl = document.getElementById('stage-submission-text');
+                    textEl.textContent = `⏳ Đã nộp bài: ${msg.submittedCount} / ${msg.totalAlive} sinh viên (${msg.latestSubmitName ? msg.latestSubmitName + ' vừa chốt' : ''})...`;
+                }
+
+                // CÔNG BỐ KẾT QUẢ CÂU HỎI (KHI TẤT CẢ ĐÃ NỘP HOẶC HẾT GIỜ)
+                if (msg.type === 'QUESTION_REVEAL') {
+                    handleHostQuestionReveal(msg);
+                }
+
+                if (msg.type === 'LEADERBOARD_UPDATE') {
+                    updateLeaderboard(msg.leaderboard || []);
+                }
+
+                if (msg.type === 'MATCH_FINISHED') {
+                    handleHostMatchFinished(msg);
+                }
+
+                if (msg.type === 'LOBBY_RESET') {
+                    gameState = 'LOBBY';
+                    document.getElementById('lobby-view').style.display = 'block';
+                    document.getElementById('join-banner-section').style.display = 'grid';
+                    document.getElementById('control-bar-section').style.display = 'flex';
+                    document.getElementById('in-game-view').style.display = 'none';
+                    updateLobbyView(msg.players || []);
+                }
+
+                if (msg.type === 'ERROR') {
+                    alert(msg.message);
+                }
+            };
+
+            ws.onclose = () => {
+                document.getElementById('server-status-text').textContent = 'MẤT KẾT NỐI (THỬ LẠI...)';
+                setTimeout(initWebSocket, 2000);
+            };
+        }
+
+        function updateLobbyView(players) {
+            const count = players.length;
+            document.getElementById('player-count-display').textContent = `${count} / 50`;
+            document.getElementById('btn-start-match').disabled = (count === 0);
+
+            const grid = document.getElementById('players-lobby-grid');
+            if (count === 0) {
+                grid.innerHTML = '<div style="color: #94a3b8; grid-column: 1/-1; text-align: center; padding: 40px; font-size: 1.2rem;">⏳ Chưa có sinh viên nào vào phòng. Chiếu mã QR lên máy chiếu để sinh viên quét!</div>';
+                return;
+            }
+
+            grid.innerHTML = '';
+            players.forEach(p => {
+                const card = document.createElement('div');
+                card.className = 'player-card';
+                card.innerHTML = `
+                    <div class="player-avatar">${charIcons[p.charIdx] || '🎖️'}</div>
+                    <div style="flex:1; overflow:hidden;">
+                        <div class="player-name">${p.name}</div>
+                        <div class="player-status-badge">✓ ĐÃ SẴN SÀNG</div>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function handleHostQuestionStart(msg) {
+            currentQIdx = msg.questionIdx;
+            totalQuestions = msg.totalQuestions;
+
+            document.getElementById('stage-q-num').textContent = `CÂU HỎI ${currentQIdx + 1} / ${totalQuestions} (${msg.level})`;
+            document.getElementById('stage-question-text').textContent = msg.questionText;
+            document.getElementById('stage-submission-text').textContent = `⏳ Đã nộp bài: 0 / ${msg.activePlayers} sinh viên...`;
+
+            document.getElementById('classroom-stats-row').style.display = 'none';
+            document.getElementById('btn-force-reveal').style.display = 'inline-block';
+            document.getElementById('btn-next-question').style.display = 'none';
+
+            // Render 4 options
+            const container = document.getElementById('stage-options-container');
+            container.innerHTML = '';
+            const prefixes = ['A', 'B', 'C', 'D'];
+
+            msg.options.forEach((opt, idx) => {
+                const box = document.createElement('div');
+                box.className = 'stage-option-box';
+                box.id = `host-opt-${idx}`;
+                box.innerHTML = `
+                    <div class="stage-opt-badge">${prefixes[idx]}</div>
+                    <div style="flex: 1;">${opt}</div>
+                `;
+                container.appendChild(box);
+            });
+
+            // Start countdown timer on Host screen
+            clearInterval(currentStageTimerInterval);
+            stageSecondsLeft = msg.timeLimit || 30;
+            document.getElementById('stage-timer').textContent = `${stageSecondsLeft}s`;
+
+            currentStageTimerInterval = setInterval(() => {
+                stageSecondsLeft--;
+                document.getElementById('stage-timer').textContent = `${stageSecondsLeft}s`;
+                if (stageSecondsLeft <= 0) {
+                    clearInterval(currentStageTimerInterval);
+                }
+            }, 1000);
+        }
+
+        function handleHostQuestionReveal(msg) {
+            clearInterval(currentStageTimerInterval);
+            document.getElementById('stage-timer').textContent = 'KẾT THÚC';
+
+            // Highlight đáp án đúng
+            const correctIdx = msg.correctIdx;
+            const targetBox = document.getElementById(`host-opt-${correctIdx}`);
+            if (targetBox) {
+                targetBox.classList.add('correct-highlight');
+            }
+
+            // Hiển thị thống kê số lượng chọn của cả lớp
+            if (msg.stats) {
+                document.getElementById('stat-A').textContent = msg.stats[0] || 0;
+                document.getElementById('stat-B').textContent = msg.stats[1] || 0;
+                document.getElementById('stat-C').textContent = msg.stats[2] || 0;
+                document.getElementById('stat-D').textContent = msg.stats[3] || 0;
+                document.getElementById('classroom-stats-row').style.display = 'grid';
+            }
+
+            document.getElementById('stage-submission-text').textContent = '✅ ĐÃ CÔNG BỐ ĐÁP ÁN! CẢ LỚP ĐANG XEM GIẢI THÍCH.';
+
+            // Ẩn nút khui ngay, hiển thị nút chuyển câu tiếp theo
+            document.getElementById('btn-force-reveal').style.display = 'none';
+            const btnNext = document.getElementById('btn-next-question');
+            btnNext.style.display = 'inline-block';
+            if (currentQIdx + 1 >= totalQuestions) {
+                btnNext.textContent = '🏆 CÔNG BỐ BOOYAH TOP 1';
+            } else {
+                btnNext.textContent = `➡️ CÂU TIẾP THEO (${currentQIdx + 2}/${totalQuestions})`;
+            }
+
+            // Cập nhật Bảng xếp hạng
+            updateLeaderboard(msg.leaderboard || []);
+        }
+
+        function updateLeaderboard(board) {
+            const tbody = document.getElementById('leaderboard-tbody');
+            tbody.innerHTML = '';
+
+            // Cập nhật Top 3 Podium
+            if (board.length > 0) {
+                document.getElementById('podium-1-name').textContent = board[0].name;
+                document.getElementById('podium-1-score').textContent = `${board[0].score}đ`;
+                document.getElementById('podium-1-speed').textContent = `⚡ +${board[0].totalSpeedBonus}đ tốc độ`;
+            }
+            if (board.length > 1) {
+                document.getElementById('podium-2-name').textContent = board[1].name;
+                document.getElementById('podium-2-score').textContent = `${board[1].score}đ`;
+                document.getElementById('podium-2-speed').textContent = `⚡ +${board[1].totalSpeedBonus}đ tốc độ`;
+            }
+            if (board.length > 2) {
+                document.getElementById('podium-3-name').textContent = board[2].name;
+                document.getElementById('podium-3-score').textContent = `${board[2].score}đ`;
+                document.getElementById('podium-3-speed').textContent = `⚡ +${board[2].totalSpeedBonus}đ tốc độ`;
+            }
+
+            // Render bảng
+            board.forEach((p, idx) => {
+                const tr = document.createElement('tr');
+                const rankText = idx === 0 ? '🥇 #1' : idx === 1 ? '🥈 #2' : idx === 2 ? '🥉 #3' : `#${idx + 1}`;
+                tr.innerHTML = `
+                    <td class="td-rank">${rankText}</td>
+                    <td class="td-name">${p.name}</td>
+                    <td>${charNames[p.charIdx] || 'Kelly'}</td>
+                    <td class="td-score">${p.score}</td>
+                    <td style="color: var(--ff-cyan); font-weight: 700;">+${p.totalSpeedBonus}đ</td>
+                    <td><span style="color: ${p.hp > 0 ? 'var(--safe-zone)' : 'var(--danger)'}; font-weight:800;">${p.hp}/100 HP</span></td>
+                    <td>${p.eliminated ? '<span style="color:var(--danger);">💀 Đã gục ngã</span>' : '<span style="color:var(--safe-zone);">⚡ Còn sống</span>'}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function hostForceReveal() {
+            if (confirm('Khui đáp án ngay bây giờ cho cả lớp?')) {
+                ws.send(JSON.stringify({ type: 'HOST_FORCE_REVEAL' }));
+            }
+        }
+
+        function hostStartMatch() {
+            if (confirm('Bắt đầu trận đấu cho toàn bộ sinh viên đã sẵn sàng trong sảnh chờ?')) {
+                ws.send(JSON.stringify({ type: 'HOST_START_MATCH' }));
+            }
+        }
+
+        function hostNextQuestion() {
+            ws.send(JSON.stringify({ type: 'HOST_NEXT_QUESTION' }));
+        }
+
+        function hostResetLobby() {
+            if (confirm('Khởi tạo lại sảnh chờ cho trận đấu mới?')) {
+                ws.send(JSON.stringify({ type: 'HOST_RESET_LOBBY' }));
+            }
+        }
+
+        function copyJoinUrl() {
+            const urlInput = document.getElementById('client-url-input');
+            navigator.clipboard.writeText(urlInput.value).then(() => {
+                alert('Đã sao chép đường link tham gia!');
+            });
+        }
+    </script>
+</body>
+</html>
