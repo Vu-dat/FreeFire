@@ -741,13 +741,16 @@
         });
 
         function fetchServerInfo() {
-            fetch('/api/info')
+            const originUrl = window.location.origin;
+            fetch('/api/info?url=' + encodeURIComponent(originUrl))
                 .then(r => r.json())
                 .then(data => {
-                    document.getElementById('client-url-input').value = data.clientUrl;
+                    document.getElementById('client-url-input').value = data.clientUrl || originUrl;
                     if (data.qrCode) document.getElementById('qr-code-img').src = data.qrCode;
                 })
-                .catch(err => console.error(err));
+                .catch(err => {
+                    document.getElementById('client-url-input').value = originUrl;
+                });
         }
 
         function initWebSocket() {

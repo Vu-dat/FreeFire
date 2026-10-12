@@ -5,29 +5,40 @@
 
 ---
 
-## 🚀 HƯỚNG DẪN KHỞI CHẠY (DÀNH CHO BẠN - MÁY CHỦ HOST)
+## 🌐 HƯỚNG DẪN MỞ SERVER RA INTERNET (CHO PHÉP KHÁC MẠNG / 4G TRUY CẬP)
 
-### Cách 1: Chạy nhanh bằng 1 cú nhấp chuột (Khuyên dùng)
-* Nhấp đúp vào file `run_game.bat` trong thư mục này.
-* Trình duyệt sẽ tự động mở trang Quản Trị Máy Chủ tại: **`http://localhost:3000/host`**
-
-### Cách 2: Chạy bằng Terminal / PowerShell
-```bash
-npm start
-# hoặc
-node server.js
-```
+> **⚠️ LƯU Ý VỀ VERCEL:**  
+> Vercel là nền tảng **Serverless** (chỉ chạy các hàm tạm thời trong vài giây rồi tự ngắt), nên **không hỗ trợ máy chủ WebSocket liên tục** (`ws://`/`wss://`) để đồng bộ thời gian thực cho 50 người chơi.  
+> Dưới đây là 2 cách chuẩn nhất, hoàn toàn **MIỄN PHÍ** để bạn đưa game lên Internet:
 
 ---
 
-## 📱 HƯỚNG DẪN THI ĐẤU DÀNH CHO NGƯỜI CHƠI (SINH VIÊN)
+### CÁCH 1: Triển khai lên Cloud Render.com (KHUYÊN DÙNG NHẤT — 2 PHÚT)
+Vì bạn đã push code lên GitHub, việc deploy lên Render.com là nhanh và mượt mà nhất:
 
-1. Máy tính hoặc điện thoại của sinh viên chỉ cần kết nối **chung mạng Wi-Fi** với máy chủ của bạn.
-2. Sinh viên quét **Mã QR Code** to rõ trên màn hình chiếu của Máy Chủ, hoặc gõ đường link dạng:
-   ```
-   http://192.168.x.x:3000
-   ```
-3. **Bước 1 - Chuẩn bị:** Sinh viên nhập Mật danh (Tên) và chọn Nhân vật sinh tồn (Kelly Fact-Check, Chrono Phản Biện, Alok Prompt-Master).
-4. **Bước 2 - Đứng ở Sảnh Chờ (Waiting Lobby):** Sinh viên bấm *"Sẵn sàng vào Sảnh Chờ"*. Màn hình của sinh viên sẽ hiển thị trạng thái **Đang đợi máy chủ bắt đầu trận đấu...** và hoàn toàn bị khóa tương tác, không thể tự chơi trước.
-5. **Bước 3 - Nhảy dù đồng loạt:** Khi Máy Chủ (bạn) trên bục giảng nhấn nút **"🚀 BẮT ĐẦU TRẬN ĐẤU (START)"**, toàn bộ tối đa 50 điện thoại/máy tính của sinh viên đồng loạt đếm ngược `3... 2... 1...` và nhảy dù vào chiến trường Vòng Bo!
-6. **Bước 4 - Trực tiếp:** Điểm số, máu HP và các pha Headshot/Dính bẫy của từng sinh viên sẽ được truyền thời gian thực (real-time) về màn hình máy chiếu Máy Chủ qua Bảng Xếp Hạng Giải Đấu (Live Leaderboard)!
+1. Truy cập [https://render.com](https://render.com) và bấm **Sign in with GitHub**.
+2. Tại trang Dashboard, bấm nút **"New +"** (góc trên bên phải) $\rightarrow$ chọn **"Web Service"**.
+3. Chọn kho chứa GitHub (Repository) dự án này của bạn và bấm **Connect**.
+4. Điền các mục đơn giản sau:
+   - **Name:** `vong-bo-liem-chinh` (hoặc tên bạn thích).
+   - **Runtime:** `Node`.
+   - **Build Command:** `npm install`
+   - **Start Command:** `node server.js`
+   - **Instance Type:** Chọn gói **Free** ($0/tháng).
+5. Bấm **"Deploy Web Service"**.
+6. Đợi 1-2 phút, Render sẽ cấp cho bạn đường link HTTPS chính thức:
+   `https://vong-bo-liem-chinh.onrender.com`
+   - **Màn hình Host của bạn:** `https://vong-bo-liem-chinh.onrender.com/host`
+   - **Màn hình sinh viên:** Quét mã QR hoặc truy cập `https://vong-bo-liem-chinh.onrender.com`
+   - Bất kể dùng 4G Viettel, MobiFone hay Wi-Fi ở bất cứ đâu đều thi đấu chung một phòng cực kỳ mượt mà!
+
+---
+
+### CÁCH 2: Mở Internet ngay từ máy tính cá nhân (Dùng `tunnel.bat`)
+Nếu bạn muốn chạy server trực tiếp trên laptop của mình mà sinh viên dùng 4G vẫn kết nối được:
+
+1. Bật máy chủ như bình thường bằng file `run_game.bat`.
+2. Nhấp đúp vào file `tunnel.bat` trong thư mục này.
+3. Cửa sổ sẽ hiển thị một đường link công khai dạng:
+   `https://xxxx.loca.lt`
+4. Bạn chỉ cần gửi đường link đó (hoặc link `/host`) cho cả lớp, mọi người ở bất kỳ mạng nào đều vào chơi được ngay lập tức!

@@ -218,18 +218,42 @@ const server = http.createServer((req, res) => {
     let reqUrl = req.url.split('?')[0];
 
     if (reqUrl === '/api/info') {
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({
-            hostIp: localIp,
-            port: PORT,
-            clientUrl: clientUrl,
-            qrCode: qrCodeDataUrl,
-            maxPlayers: MAX_PLAYERS,
-            playerCount: players.size,
-            gameState: gameState,
-            currentQuestionIdx: currentQuestionIdx,
-            totalQuestions: questionsMaster.length
-        }));
+        const urlParams = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
+        const paramUrl = urlParams.searchParams.get('url');
+
+        const protocol = req.headers['x-forwarded-proto'] || (req.socket.encrypted ? 'https' : 'http');
+        const hostHeader = req.headers['x-forwarded-host'] || req.headers.host || `${localIp}:${PORT}`;
+        const effectiveClientUrl = paramUrl || process.env.RENDER_EXTERNAL_URL || `${protocol}://${hostHeader}`;
+
+        QRCode.toDataURL(effectiveClientUrl, { width: 340, margin: 2, color: { dark: '#000000', light: '#ffffff' } })
+            .then(qr => {
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({
+                    hostIp: localIp,
+                    port: PORT,
+                    clientUrl: effectiveClientUrl,
+                    qrCode: qr,
+                    maxPlayers: MAX_PLAYERS,
+                    playerCount: players.size,
+                    gameState: gameState,
+                    currentQuestionIdx: currentQuestionIdx,
+                    totalQuestions: questionsMaster.length
+                }));
+            })
+            .catch(() => {
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({
+                    hostIp: localIp,
+                    port: PORT,
+                    clientUrl: effectiveClientUrl,
+                    qrCode: qrCodeDataUrl,
+                    maxPlayers: MAX_PLAYERS,
+                    playerCount: players.size,
+                    gameState: gameState,
+                    currentQuestionIdx: currentQuestionIdx,
+                    totalQuestions: questionsMaster.length
+                }));
+            });
         return;
     }
 
