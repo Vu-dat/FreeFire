@@ -988,7 +988,7 @@
         }
 
         function hostResetLobby() {
-            if (confirm('Khởi tạo lại sảnh chờ cho trận đấu mới?')) {
+            if (confirm('XÓA TOÀN BỘ người chơi khỏi sảnh và khởi tạo lại phòng cho trận đấu mới?\nMọi điện thoại sẽ quay về màn hình nhập tên và phải vào lại sảnh.')) {
                 ws.send(JSON.stringify({ type: 'HOST_RESET_LOBBY' }));
             }
         }

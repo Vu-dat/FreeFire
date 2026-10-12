@@ -1261,10 +1261,12 @@
                     handleMatchFinished(msg);
                 }
 
-                // 9. Reset sảnh
+                // 9. Reset sảnh: server đã XÓA toàn bộ người chơi -> quay về màn hình nhập tên
                 if (msg.type === 'LOBBY_RESET') {
-                    switchScreen('screen-waiting-lobby');
+                    clearInterval(clientTimerInterval);
+                    myPlayerId = null;
                     resetGameState();
+                    switchScreen('screen-char-select');
                 }
 
                 if (msg.type === 'ERROR') {
@@ -1362,6 +1364,8 @@
             myStreak = 0;
             correctCount = 0;
             glooActive = false;
+            isLockedAnswer = false;
+            mySelectedOptionIdx = null;
             updateHPBar();
             document.getElementById('hud-score').textContent = '0';
         }

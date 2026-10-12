@@ -693,22 +693,19 @@ wss.on('connection', (ws) => {
             gameState = 'LOBBY';
             currentQuestionIdx = 0;
             currentSubmissions.clear();
+            questionStartTime = 0;
 
-            players.forEach(p => {
-                p.score = 0;
-                p.hp = 100;
-                p.streak = 0;
-                p.correctCount = 0;
-                p.totalSpeedBonus = 0;
-                p.totalTimeSpent = 0;
-                p.eliminated = false;
-            });
+            // XÓA TOÀN BỘ NGƯỜI CHƠI ĐÃ CHƠI KHỎI SẢNH (về 0/50)
+            const kickedCount = players.size;
+            players.clear();
 
             broadcastToAll({
                 type: 'LOBBY_RESET',
+                playerCount: players.size,
+                maxPlayers: MAX_PLAYERS,
                 players: getPlayerListSummary()
             });
-            console.log('[MATCH] Máy chủ đã đưa phòng về trạng thái Sảnh Chờ ban đầu.');
+            console.log(`[MATCH] Máy chủ đã xóa ${kickedCount} người chơi khỏi sảnh và đưa phòng về trạng thái Sảnh Chờ ban đầu.`);
             return;
         }
 
